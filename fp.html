@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZENOO</title>
+  <style>
+    :root {
+      --primary: #1db954;
+      --dark-bg: #121212;
+      --card-bg: #181818;
+      --hover-bg: #282828;
+      --text-primary: #ffffff;
+      --text-secondary: #b3b3b3;
+      --sidebar-width: 240px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--dark-bg);
+      color: var(--text-primary);
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-rows: auto 1fr auto;
+      grid-template-areas: 
+        "sidebar header"
+        "sidebar main"
+        "sidebar player";
+      min-height: 100vh;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      grid-area: sidebar;
+      background-color: #000000;
+      padding: 20px 0;
+      height: 100vh;
+      position: fixed;
+      width: var(--sidebar-width);
+      overflow-y: auto;
+    }
+
+    .logo {
+      padding: 0 20px 20px;
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo span {
+      color: var(--primary);
+    }
+
+    .nav-links {
+      list-style: none;
+      padding: 0 10px;
+    }
+
+    .nav-links li {
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: background-color 0.2s;
+    }
+
+    .nav-links li:hover, .nav-links li.active {
+      background-color: #282828;
+    }
+
+    .nav-links li i {
+      width: 24px;
+      text-align: center;
+    }
+
+    /* Header Styles */
+    .header {
+      grid-area: header;
+      background: linear-gradient(to bottom, #2d1b69, var(--dark-bg) 200px);
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .search-container {
+      display: flex;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 25px;
+      padding: 8px 15px;
+      width: 400px;
+      position: relative;
+    }
+
+    #searchBox {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    #searchBox::placeholder {
+      color: var(--text-secondary);
+    }
+
+    #searchBtn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    .suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 10;
+      display: none;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .suggestion-item {
+      padding: 12px 15px;
+      text-align: left;
+      color: var(--text-primary);
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .suggestion-item:hover {
+      background: var(--hover-bg);
+    }
+
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+
+    .suggestion-item img {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+    }
+
+    .user-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .user-profile {
+      background: #333;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    /* Main Content Styles */
+    .main-content {
+      grid-area: main;
+      padding: 20px 30px;
+      overflow-y: auto;
+    }
+
+    .section-title {
+      font-size: 24px;
+      margin: 20px 0;
+      font-weight: 600;
+    }
+
+    .categories {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .category-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-primary);
+      padding: 8px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-size: 14px;
+    }
+
+    .category-btn:hover, .category-btn.active {
+      background: var(--primary);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 15px;
+      transition: background 0.3s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .card:hover {
+      background: var(--hover-bg);
+    }
+
+    .card img {
+      width: 100%;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    }
+
+    .card h3 {
+      font-size: 16px;
+      margin-bottom: 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .play-btn {
+      position: absolute;
+      bottom: 85px;
+      right: 15px;
+      background: var(--primary);
+      border: none;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .card:hover .play-btn {
+      opacity: 1;
+      transform: translateY(-5px);
+    }
+
+    .play-btn:hover {
+      transform: scale(1.05) translateY(-5px);
+    }
+
+    /* Now Playing Styles */
+    #nowPlaying {
+      grid-area: player;
+      background: var(--card-bg);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
+    }
+
+    .track-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      width: 30%;
+    }
+
+    #npCover {
+      width: 56px;
+      height: 56px;
+      border-radius: 4px;
+    }
+
+    .track-details h4 {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+
+    .track-details p {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .player-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 40%;
+    }
+
+    .control-buttons {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+
+    .control-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .play-pause {
+      background: var(--text-primary);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+    }
+
+    .progress-container {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .progress-bar {
+      flex-grow: 1;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .progress {
+      height: 100%;
+      background: var(--text-secondary);
+      border-radius: 2px;
+      width: 30%;
+    }
+
+    .volume-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 30%;
+      justify-content: flex-end;
+    }
+
+    .volume-bar {
+      width: 100px;
+      height: 4px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 2px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .volume-level {
+      height: 100%;
+      background: var(--text-secondary);
+      border-radius: 2px;
+      width: 70%;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+      
+      .search-container {
+        width: 300px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        grid-template-columns: 1fr;
+        grid-template-areas: 
+          "header"
+          "main"
+          "player";
+      }
+      
+      .sidebar {
+        display: none;
+      }
+      
+      .header {
+        padding: 15px;
+      }
+      
+      .search-container {
+        width: 200px;
+      }
+      
+      .cards-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <span>ZENOO</span>
+    </div>
+    <ul class="nav-links">
+      <li class="active"><i>🏠</i> Home</li>
+      <li><i>🔍</i> Search</li>
+      <li><i>📚</i> Your Library</li>
+      <li><i>➕</i> Create Playlist</li>
+      <li><i>💚</i> Liked Songs</li>
+    </ul>
+    
+    <div style="padding: 20px 15px 10px; color: var(--text-secondary); font-size: 14px;">
+      POPULAR GENRES
+    </div>
+    <ul class="nav-links">
+      <li><i>🎤</i> Pop</li>
+      <li><i>🎸</i> Rock</li>
+      <li><i>🎹</i> Hip-Hop</li>
+      <li><i>🎷</i> R&B</li>
+      <li><i>🎻</i> Classical</li>
+      <li><i>🥁</i> Electronic</li>
+    </ul>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="search-container">
+      <button id="searchBtn"><i>🔍</i></button>
+      <input type="text" id="searchBox" placeholder="What do you want to listen to?">
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+    <div class="user-actions">
+      <button class="user-profile">Login</button>
+      
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1 class="section-title">Good evening</h1>
+    
+    <div class="categories">
+      <button class="category-btn active">All</button>
+      <button class="category-btn">Pop</button>
+      <button class="category-btn">Hip-Hop</button>
+      <button class="category-btn">R&B</button>
+      <button class="category-btn">Rock</button>
+      <button class="category-btn">Electronic</button>
+    </div>
+    
+    <h2 class="section-title">Popular Artists</h2>
+    <div class="cards-grid" id="popularArtists"></div>
+    
+    <h2 class="section-title">Made for you</h2>
+    <div class="cards-grid" id="recommendedTracks"></div>
+    
+    <h2 class="section-title">Recently played</h2>
+    <div class="cards-grid" id="recentTracks"></div>
+    
+    <h2 class="section-title">Search Results</h2>
+    <div class="cards-grid" id="results"></div>
+  </div>
+
+  <!-- Now Playing -->
+  <div id="nowPlaying">
+    <div class="track-info">
+      <img id="npCover" src="" alt="Album Cover">
+      <div class="track-details">
+        <h4 id="npTitle">Track Title</h4>
+        <p id="npArtist">Artist Name</p>
+      </div>
+      <button class="control-btn">♥</button>
+    </div>
+    
+    <div class="player-controls">
+      <div class="control-buttons">
+        <button class="control-btn">🔀</button>
+        <button class="control-btn">⏮️</button>
+        <button class="control-btn play-pause">▶️</button>
+        <button class="control-btn">⏭️</button>
+        <button class="control-btn">🔁</button>
+      </div>
+      <div class="progress-container">
+        <span>1:23</span>
+        <div class="progress-bar">
+          <div class="progress"></div>
+        </div>
+        <span>3:45</span>
+      </div>
+    </div>
+    
+    <div class="volume-controls">
+      <button class="control-btn">🔊</button>
+      <div class="volume-bar">
+        <div class="volume-level"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const searchBtn = document.getElementById("searchBtn");
+    const searchBox = document.getElementById("searchBox");
+    const suggestions = document.getElementById("suggestions");
+    const resultsDiv = document.getElementById("results");
+    const popularArtistsDiv = document.getElementById("popularArtists");
+    const recommendedTracksDiv = document.getElementById("recommendedTracks");
+    const recentTracksDiv = document.getElementById("recentTracks");
+    const nowPlaying = document.getElementById("nowPlaying");
+    const npCover = document.getElementById("npCover");
+    const npTitle = document.getElementById("npTitle");
+    const npArtist = document.getElementById("npArtist");
+    const categoryBtns = document.querySelectorAll('.category-btn');
+
+    // Sample data for different music categories
+    const musicData = {
+      pop: [
+        { id: 1, title: "Dance Monkey", artist: "Tones and I", cover: "https://e-cdns-images.dzcdn.net/images/cover/8dbfeffa9f5e2c2a0d77cda2c0d6b4a7/250x250-000000-80-0-0.jpg" },
+        { id: 2, title: "Levitating", artist: "Dua Lipa", cover: "https://e-cdns-images.dzcdn.net/images/cover/0e8f37e3c1d7d51b7b6b9a8a9a5c5b5a/250x250-000000-80-0-0.jpg" },
+        { id: 3, title: "Stay", artist: "The Kid LAROI, Justin Bieber", cover: "https://e-cdns-images.dzcdn.net/images/cover/5a5b5c5d5e5f5a5b5c5d5e5f5a5b5c5d/250x250-000000-80-0-0.jpg" },
+        { id: 4, title: "Good 4 U", artist: "Olivia Rodrigo", cover: "https://e-cdns-images.dzcdn.net/images/cover/6a6b6c6d6e6f6a6b6c6d6e6f6a6b6c6d/250x250-000000-80-0-0.jpg" },
+        { id: 5, title: "Blinding Lights", artist: "The Weeknd", cover: "https://e-cdns-images.dzcdn.net/images/cover/7a7b7c7d7e7f7a7b7c7d7e7f7a7b7c7d/250x250-000000-80-0-0.jpg" },
+        { id: 6, title: "Watermelon Sugar", artist: "Harry Styles", cover: "https://e-cdns-images.dzcdn.net/images/cover/8a8b8c8d8e8f8a8b8c8d8e8f8a8b8c8d/250x250-000000-80-0-0.jpg" }
+      ],
+      hiphop: [
+        { id: 7, title: "God's Plan", artist: "Drake", cover: "https://e-cdns-images.dzcdn.net/images/cover/9a9b9c9d9e9f9a9b9c9d9e9f9a9b9c9d/250x250-000000-80-0-0.jpg" },
+        { id: 8, title: "Sicko Mode", artist: "Travis Scott", cover: "https://e-cdns-images.dzcdn.net/images/cover/1a1b1c1d1e1f1a1b1c1d1e1f1a1b1c1d/250x250-000000-80-0-0.jpg" },
+        { id: 9, title: "Lose Yourself", artist: "Eminem", cover: "https://e-cdns-images.dzcdn.net/images/cover/2a2b2c2d2e2f2a2b2c2d2e2f2a2b2c2d/250x250-000000-80-0-0.jpg" },
+        { id: 10, title: "Hotline Bling", artist: "Drake", cover: "https://e-cdns-images.dzcdn.net/images/cover/3a3b3c3d3e3f3a3b3c3d3e3f3a3b3c3d/250x250-000000-80-0-0.jpg" },
+        { id: 11, title: "HUMBLE.", artist: "Kendrick Lamar", cover: "https://e-cdns-images.dzcdn.net/images/cover/4a4b4c4d4e4f4a4b4c4d4e4f4a4b4c4d/250x250-000000-80-0-0.jpg" },
+        { id: 12, title: "Bad and Boujee", artist: "Migos", cover: "https://e-cdns-images.dzcdn.net/images/cover/5a5b5c5d5e5f5a5b5c5d5e5f5a5b5c5d/250x250-000000-80-0-0.jpg" }
+      ],
+      rnb: [
+        { id: 13, title: "Blinding Lights", artist: "The Weeknd", cover: "https://e-cdns-images.dzcdn.net/images/cover/6a6b6c6d6e6f6a6b6c6d6e6f6a6b6c6d/250x250-000000-80-0-0.jpg" },
+        { id: 14, title: "Adorn", artist: "Miguel", cover: "https://e-cdns-images.dzcdn.net/images/cover/7a7b7c7d7e7f7a7b7c7d7e7f7a7b7c7d/250x250-000000-80-0-0.jpg" },
+        { id: 15, title: "Thinkin Bout You", artist: "Frank Ocean", cover: "https://e-cdns-images.dzcdn.net/images/cover/8a8b8c8d8e8f8a8b8c8d8e8f8a8b8c8d/250x250-000000-80-0-0.jpg" },
+        { id: 16, title: "Love On Top", artist: "Beyoncé", cover: "https://e-cdns-images.dzcdn.net/images/cover/9a9b9c9d9e9f9a9b9c9d9e9f9a9b9c9d/250x250-000000-80-0-0.jpg" },
+        { id: 17, title: "No Guidance", artist: "Chris Brown", cover: "https://e-cdns-images.dzcdn.net/images/cover/1a1b1c1d1e1f1a1b1c1d1e1f1a1b1c1d/250x250-000000-80-0-0.jpg" },
+        { id: 18, title: "Exchange", artist: "Bryson Tiller", cover: "https://e-cdns-images.dzcdn.net/images/cover/2a2b2c2d2e2f2a2b2c2d2e2f2a2b2c2d/250x250-000000-80-0-0.jpg" }
+      ],
+      rock: [
+        { id: 19, title: "Bohemian Rhapsody", artist: "Queen", cover: "https://e-cdns-images.dzcdn.net/images/cover/3a3b3c3d3e3f3a3b3c3d3e3f3a3b3c3d/250x250-000000-80-0-0.jpg" },
+        { id: 20, title: "Sweet Child O'Mine", artist: "Guns N' Roses", cover: "https://e-cdns-images.dzcdn.net/images/cover/4a4b4c4d4e4f4a4b4c4d4e4f4a4b4c4d/250x250-000000-80-0-0.jpg" },
+        { id: 21, title: "Smells Like Teen Spirit", artist: "Nirvana", cover: "https://e-cdns-images.dzcdn.net/images/cover/5a5b5c5d5e5f5a5b5c5d5e5f5a5b5c5d/250x250-000000-80-0-0.jpg" },
+        { id: 22, title: "Hotel California", artist: "Eagles", cover: "https://e-cdns-images.dzcdn.net/images/cover/6a6b6c6d6e6f6a6b6c6d6e6f6a6b6c6d/250x250-000000-80-0-0.jpg" },
+        { id: 23, title: "Stairway to Heaven", artist: "Led Zeppelin", cover: "https://e-cdns-images.dzcdn.net/images/cover/7a7b7c7d7e7f7a7b7c7d7e7f7a7b7c7d/250x250-000000-80-0-0.jpg" },
+        { id: 24, title: "Back In Black", artist: "AC/DC", cover: "https://e-cdns-images.dzcdn.net/images/cover/8a8b8c8d8e8f8a8b8c8d8e8f8a8b8c8d/250x250-000000-80-0-0.jpg" }
+      ]
+    };
+
+    // Popular artists data
+    const popularArtists = [
+      { id: 1, name: "Taylor Swift", image: "https://e-cdns-images.dzcdn.net/images/artist/5a5b5c5d5e5f5a5b5c5d5e5f5a5b5c5d/250x250-000000-80-0-0.jpg", genre: "Pop" },
+      { id: 2, name: "Drake", image: "https://e-cdns-images.dzcdn.net/images/artist/6a6b6c6d6e6f6a6b6c6d6e6f6a6b6c6d/250x250-000000-80-0-0.jpg", genre: "Hip-Hop" },
+      { id: 3, name: "The Weeknd", image: "https://e-cdns-images.dzcdn.net/images/artist/7a7b7c7d7e7f7a7b7c7d7e7f7a7b7c7d/250x250-000000-80-0-0.jpg", genre: "R&B" },
+      { id: 4, name: "Billie Eilish", image: "https://e-cdns-images.dzcdn.net/images/artist/8a8b8c8d8e8f8a8b8c8d8e8f8a8b8c8d/250x250-000000-80-0-0.jpg", genre: "Pop" },
+      { id: 5, name: "Ed Sheeran", image: "https://e-cdns-images.dzcdn.net/images/artist/9a9b9c9d9e9f9a9b9c9d9e9f9a9b9c9d/250x250-000000-80-0-0.jpg", genre: "Pop" },
+      { id: 6, name: "Bad Bunny", image: "https://e-cdns-images.dzcdn.net/images/artist/1a1b1c1d1e1f1a1b1c1d1e1f1a1b1c1d/250x250-000000-80-0-0.jpg", genre: "Latin" }
+    ];
+
+    // Search suggestions
+    const popularSearches = [
+      { title: "Shape of You", artist: "Ed Sheeran", cover: "https://e-cdns-images.dzcdn.net/images/cover/2a2b2c2d2e2f2a2b2c2d2e2f2a2b2c2d/250x250-000000-80-0-0.jpg" },
+      { title: "Blinding Lights", artist: "The Weeknd", cover: "https://e-cdns-images.dzcdn.net/images/cover/3a3b3c3d3e3f3a3b3c3d3e3f3a3b3c3d/250x250-000000-80-0-0.jpg" },
+      { title: "Dance Monkey", artist: "Tones and I", cover: "https://e-cdns-images.dzcdn.net/images/cover/4a4b4c4d4e4f4a4b4c4d4e4f4a4b4c4d/250x250-000000-80-0-0.jpg" },
+      { title: "Bad Guy", artist: "Billie Eilish", cover: "https://e-cdns-images.dzcdn.net/images/cover/5a5b5c5d5e5f5a5b5c5d5e5f5a5b5c5d/250x250-000000-80-0-0.jpg" },
+      { title: "Levitating", artist: "Dua Lipa", cover: "https://e-cdns-images.dzcdn.net/images/cover/6a6b6c6d6e6f6a6b6c6d6e6f6a6b6c6d/250x250-000000-80-0-0.jpg" }
+    ];
+
+    // Initialize the page
+    function initPage() {
+      loadPopularArtists();
+      loadRecommendedTracks();
+      loadRecentTracks();
+      setupEventListeners();
+    }
+
+    // Load popular artists
+    function loadPopularArtists() {
+      popularArtistsDiv.innerHTML = '';
+      popularArtists.forEach(artist => {
+        const card = createCard(artist.image, artist.name, artist.genre);
+        popularArtistsDiv.appendChild(card);
+      });
+    }
+
+    // Load recommended tracks
+    function loadRecommendedTracks() {
+      recommendedTracksDiv.innerHTML = '';
+      // Mix tracks from different genres
+      const allTracks = [...musicData.pop, ...musicData.hiphop, ...musicData.rnb, ...musicData.rock];
+      // Shuffle array
+      const shuffled = allTracks.sort(() => 0.5 - Math.random());
+      // Get 6 random tracks
+      const selected = shuffled.slice(0, 6);
+      
+      selected.forEach(track => {
+        const card = createCard(track.cover, track.title, track.artist, true);
+        recommendedTracksDiv.appendChild(card);
+      });
+    }
+
+    // Load recent tracks
+    function loadRecentTracks() {
+      recentTracksDiv.innerHTML = '';
+      // Get 6 random tracks from pop and hiphop
+      const recentTracks = [...musicData.pop.slice(0, 3), ...musicData.hiphop.slice(0, 3)];
+      
+      recentTracks.forEach(track => {
+        const card = createCard(track.cover, track.title, track.artist, true);
+        recentTracksDiv.appendChild(card);
+      });
+    }
+
+    // Create a card element
+    function createCard(image, title, subtitle, isTrack = false) {
+      const card = document.createElement('div');
+      card.className = 'card fade-in';
+      
+      card.innerHTML = `
+        <img src="${image}" alt="${title}">
+        <h3>${title}</h3>
+        <p>${subtitle}</p>
+        ${isTrack ? '<button class="play-btn">▶️</button>' : ''}
+      `;
+      
+      if (isTrack) {
+        card.addEventListener('click', () => {
+          playTrack(title, subtitle, image);
+        });
+        
+        const playBtn = card.querySelector('.play-btn');
+        playBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          playTrack(title, subtitle, image);
+        });
+      }
+      
+      return card;
+    }
+
+    // Play a track
+    function playTrack(title, artist, cover) {
+      npCover.src = cover;
+      npTitle.textContent = title;
+      npArtist.textContent = artist;
+      nowPlaying.style.display = 'flex';
+      
+      // Update play button to pause
+      const playPauseBtn = document.querySelector('.play-pause');
+      playPauseBtn.textContent = '⏸️';
+    }
+
+    // Show search suggestions
+    function showSuggestions() {
+      const query = searchBox.value.toLowerCase();
+      suggestions.innerHTML = '';
+      
+      if (query.length > 0) {
+        const filtered = popularSearches.filter(item => 
+          item.title.toLowerCase().includes(query) || 
+          item.artist.toLowerCase().includes(query)
+        );
+        
+        if (filtered.length > 0) {
+          suggestions.style.display = "block";
+          filtered.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "suggestion-item";
+            div.innerHTML = `
+              <img src="${item.cover}" alt="${item.title}">
+              <div>
+                <div>${item.title}</div>
+                <div style="color: var(--text-secondary); font-size: 12px;">${item.artist}</div>
+              </div>
+            `;
+            div.addEventListener("click", () => {
+              searchBox.value = item.title;
+              suggestions.style.display = "none";
+              searchMusic();
+            });
+            suggestions.appendChild(div);
+          });
+        } else {
+          suggestions.style.display = "none";
+        }
+      } else {
+        suggestions.style.display = "none";
+      }
+    }
+
+    // Search music function
+    function searchMusic() {
+      const query = searchBox.value.trim();
+      if (!query) return;
+
+      // In a real app, this would be an API call
+      // For demo purposes, we'll simulate search results
+      resultsDiv.innerHTML = '';
+      
+      // Combine tracks from all genres and filter by query
+      const allTracks = [...musicData.pop, ...musicData.hiphop, ...musicData.rnb, ...musicData.rock];
+      const filteredTracks = allTracks.filter(track => 
+        track.title.toLowerCase().includes(query.toLowerCase()) || 
+        track.artist.toLowerCase().includes(query.toLowerCase())
+      );
+      
+      if (filteredTracks.length > 0) {
+        filteredTracks.forEach(track => {
+          const card = createCard(track.cover, track.title, track.artist, true);
+          resultsDiv.appendChild(card);
+        });
+        
+        // Scroll to results
+        resultsDiv.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        resultsDiv.innerHTML = '<p>No results found. Try a different search term.</p>';
+      }
+    }
+
+    // Filter by category
+    function filterByCategory(category) {
+      resultsDiv.innerHTML = '';
+      let tracks = [];
+      
+      if (category === 'All') {
+        tracks = [...musicData.pop, ...musicData.hiphop, ...musicData.rnb, ...musicData.rock];
+      } else {
+        const key = category.toLowerCase().replace('-', '');
+        tracks = musicData[key] || [];
+      }
+      
+      if (tracks.length > 0) {
+        tracks.forEach(track => {
+          const card = createCard(track.cover, track.title, track.artist, true);
+          resultsDiv.appendChild(card);
+        });
+      } else {
+        resultsDiv.innerHTML = '<p>No tracks found in this category.</p>';
+      }
+    }
+
+    // Set up event listeners
+
+    function setupEventListeners() {
+      searchBtn.addEventListener("click", searchMusic);
+      
+      searchBox.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") searchMusic();
+      });
+      
+      searchBox.addEventListener("input", showSuggestions);
+      
+      // Close suggestions when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!searchBox.contains(e.target) && !suggestions.contains(e.target)) {
+          suggestions.style.display = "none";
+        }
+      });
+      
+      // Category filter buttons
+      categoryBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+          // Remove active class from all buttons
+          categoryBtns.forEach(b => b.classList.remove('active'));
+          // Add active class to clicked button
+          btn.classList.add('active');
+          // Filter by category
+          filterByCategory(btn.textContent);
+        });
+      });
+      
+      // Play/pause button
+      const playPauseBtn = document.querySelector('.play-pause');
+      playPauseBtn.addEventListener('click', function() {
+        if (this.textContent === '▶️') {
+          this.textContent = '⏸️';
+          // In a real app, you would play the audio here
+        } else {
+          this.textContent = '▶️';
+          // In a real app, you would pause the audio here
+        }
+      });
+      
+      // Progress bar click
+      const progressBar = document.querySelector('.progress-bar');
+      progressBar.addEventListener('click', function(e) {
+        const rect = this.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        const progress = this.querySelector('.progress');
+        progress.style.width = `${percent * 100}%`;
+        // In a real app, you would seek to this position in the track
+      });
+      
+      // Volume bar click
+      const volumeBar = document.querySelector('.volume-bar');
+      volumeBar.addEventListener('click', function(e) {
+        const rect = this.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        const volumeLevel = this.querySelector('.volume-level');
+        volumeLevel.style.width = `${percent * 100}%`;
+        // In a real app, you would set the volume here
+      });
+    }
+
+    // Initialize the application when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', initPage);
+  </script>
+</body>
+</html>
